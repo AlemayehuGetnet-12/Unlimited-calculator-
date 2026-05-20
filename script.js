@@ -1,0 +1,96 @@
+const translations = {
+  en: {
+    title: "To-Do List",
+    add: "Add",
+    input: "Enter task"
+  },
+  am: {
+    title: "የስራ ዝርዝር",
+    add: "ጨምር",
+    input: "ስራ ያስገቡ"
+  }
+};
+
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let currentLang = localStorage.getItem("lang") || "en";
+
+const taskInput = document.getElementById("taskInput");
+const taskList = document.getElementById("taskList");
+
+// Update language
+function updateLanguage(lang) {
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll("[data-key]").forEach(el => {
+    el.textContent = translations[lang][el.dataset.key];
+  });
+
+  document.querySelectorAll("[data-placeholder]").forEach(el => {
+    el.placeholder = translations[lang][el.dataset.placeholder];
+  });
+
+  localStorage.setItem("lang", lang);
+}
+
+// Render tasks
+function renderTasks() {
+  taskList.innerHTML = "";
+
+  tasks.forEach((task, index) => {
+    const li = document.createElement("li");
+
+    if (task.completed) li.classList.add("completed");
+
+    li.innerHTML = `
+      ${task.text}
+      <div class="actions">
+        <button class="complete">✔</button>
+        <button class="delete">❌</button>
+      </div>
+    `;
+
+    // Complete
+    li.querySelector(".complete").onclick = () => {
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks();
+    };
+
+    // Delete
+    li.querySelector(".delete").onclick = () => {
+      tasks.splice(index, 1);
+      saveTasks();
+    };
+
+    taskList.appendChild(li);
+  });
+}
+
+// Save tasks
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  renderTasks();
+}
+
+// Add task
+document.getElementById("addBtn").addEventListener("click", () => {
+  if (taskInput.value.trim() === "") return;
+
+  tasks.push({
+    text: taskInput.value,
+    completed: false
+  });
+
+  taskInput.value = "";
+  saveTasks();
+});
+
+// Language change
+document.getElementById("language").addEventListener("change", function () {
+  currentLang = this.value;
+  updateLanguage(currentLang);
+});
+
+// Init
+document.getElementById("language").value = currentLang;
+updateLanguage(currentLang);
+renderTasks();
